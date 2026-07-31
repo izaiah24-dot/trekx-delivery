@@ -1,5 +1,6 @@
 import React,{useState} from "react";
 import {createRoot} from "react-dom/client";
+import logo from "./public_logo.jpg";
 import {createClient} from "@supabase/supabase-js";
 import {Bike,MapPin,Package,User,Phone,LogIn,Menu,X,CheckCircle} from "lucide-react";
 import "./style.css";
