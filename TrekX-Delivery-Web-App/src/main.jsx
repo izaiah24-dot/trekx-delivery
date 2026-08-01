@@ -30,6 +30,10 @@ const supabase =
   supabaseUrl && supabaseKey
     ? createClient(supabaseUrl, supabaseKey)
     : null;
+
+
+function App() {
+
   const [menu, setMenu] = useState(false);
   const [page, setPage] = useState("home");
   const [authMode, setAuthMode] = useState("signin");
@@ -43,6 +47,29 @@ const supabase =
     sender: "",
     phone: "",
     recipient: "",
+    item: ""
+  });
+
+  const [auth, setAuth] = useState({
+    email: "",
+    password: ""
+  });
+
+  useEffect(() => {
+    if (!supabase) return;
+
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user || null);
+    });
+
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
     item: ""
   });
 
@@ -330,7 +357,7 @@ const supabase =
             </button>
           </div>
 
-          <<Logo size={32} /> size={165} />
+          <Logo size={165} />
         </section>
       </>
     );
