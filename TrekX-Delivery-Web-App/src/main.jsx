@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { createClient } from "@supabase/supabase-js";
 import {
-  Bike,
+  <Logo size={32} />,
   MapPin,
   Package,
   User,
@@ -241,7 +241,7 @@ function App() {
           </div>
 
           <div className="visual">
-            <Bike size={190} />
+            <<Logo size={32} /> size={190} />
 
             <div className="bubble">
               ⚡ Fast delivery
@@ -279,7 +279,7 @@ function App() {
 
             <article>
               <span>02</span>
-              <Bike />
+              <<Logo size={32} /> />
 
               <h3>
                 Get matched
@@ -314,7 +314,7 @@ function App() {
             </p>
 
             <h2>
-              Turn your bike into income.
+              Turn your <Logo size={32} /> into income.
             </h2>
 
             <p>
@@ -330,7 +330,7 @@ function App() {
             </button>
           </div>
 
-          <Bike size={165} />
+          <<Logo size={32} /> size={165} />
         </section>
       </>
     );
@@ -744,7 +744,7 @@ function App() {
           className="brand"
           onClick={() => changePage("home")}
         >
-          <Bike />
+          <<Logo size={32} /> />
 
           <span>
             TrekX <b>Delivery</b>
@@ -803,7 +803,7 @@ function App() {
 
       <footer>
         <div className="footerBrand">
-          <Bike />
+          <<Logo size={32} /> />
 
           <span>
             TrekX Delivery
