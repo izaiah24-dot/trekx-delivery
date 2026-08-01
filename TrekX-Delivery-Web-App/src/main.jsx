@@ -241,7 +241,7 @@ const supabase =
           </div>
 
           <div className="visual">
-            <<Logo size={32} /> size={190} />
+            <Logo size={190} />
 
             <div className="bubble">
               ⚡ Fast delivery
