@@ -57,23 +57,6 @@ function App() {
 
   useEffect(() => {
     if (!supabase) return;
-const [form, setForm] = useState({
-  pickup: "",
-  destination: "",
-  sender: "",
-  phone: "",
-  recipient: "",
-  item: ""
-});
-  email: "",
-  password: ""
-});
-    email: "",
-    password: ""
-  });
-
-  useEffect(() => {
-    if (!supabase) return;
 
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user || null);
@@ -824,7 +807,7 @@ const [form, setForm] = useState({
 
       <footer>
         <div className="footerBrand">
-          <<Logo size={32} /> />
+          <Logo size={32} />
 
           <span>
             TrekX Delivery
