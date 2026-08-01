@@ -10,22 +10,17 @@ import {
   LogIn,
   Menu,
   LogOut,
-  Navigation
-} from "lucide-react";
-
-import Logo from "./Logo";
-import "./style.css";
-import Logo from "./Logo";
+  Navigation,
   X,
   CheckCircle,
   Home,
   Search,
   ClipboardList,
   UserCircle,
-  ArrowRight,
-  LogOut,
-  Navigation
+  ArrowRight
 } from "lucide-react";
+
+import Logo from "./Logo";
 import "./style.css";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
