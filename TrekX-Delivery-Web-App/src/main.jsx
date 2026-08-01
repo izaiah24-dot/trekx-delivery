@@ -65,12 +65,9 @@ const [form, setForm] = useState({
   recipient: "",
   item: ""
 });
-
-const [auth, setAuth] = useState({
   email: "",
   password: ""
 });
-  const [auth, setAuth] = useState({
     email: "",
     password: ""
   });
@@ -768,7 +765,7 @@ const [auth, setAuth] = useState({
           className="brand"
           onClick={() => changePage("home")}
         >
-          <<Logo size={32} /> />
+          <Logo size={32} />
 
           <span>
             TrekX <b>Delivery</b>
