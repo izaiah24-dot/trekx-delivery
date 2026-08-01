@@ -57,22 +57,19 @@ function App() {
 
   useEffect(() => {
     if (!supabase) return;
+const [form, setForm] = useState({
+  pickup: "",
+  destination: "",
+  sender: "",
+  phone: "",
+  recipient: "",
+  item: ""
+});
 
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user || null);
-    });
-
-    const {
-      data: { subscription }
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-    item: ""
-  });
-
+const [auth, setAuth] = useState({
+  email: "",
+  password: ""
+});
   const [auth, setAuth] = useState({
     email: "",
     password: ""
