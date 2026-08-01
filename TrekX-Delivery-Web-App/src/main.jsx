@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { createClient } from "@supabase/supabase-js";
+
 import {
   MapPin,
   Package,
@@ -8,7 +9,12 @@ import {
   Phone,
   LogIn,
   Menu,
+  LogOut,
+  Navigation
 } from "lucide-react";
+
+import Logo from "./Logo";
+import "./style.css";
 import Logo from "./Logo";
   X,
   CheckCircle,
