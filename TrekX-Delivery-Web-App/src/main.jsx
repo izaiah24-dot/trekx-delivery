@@ -25,10 +25,11 @@ import "./style.css";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+const supabase =
+  supabaseUrl && supabaseKey
     ? createClient(supabaseUrl, supabaseKey)
     : null;
-
-function App() {
   const [menu, setMenu] = useState(false);
   const [page, setPage] = useState("home");
   const [authMode, setAuthMode] = useState("signin");
