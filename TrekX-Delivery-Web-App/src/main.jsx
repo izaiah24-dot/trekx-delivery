@@ -279,7 +279,7 @@ const supabase =
 
             <article>
               <span>02</span>
-              <<Logo size={32} /> />
+              <Logo size={32} />
 
               <h3>
                 Get matched
