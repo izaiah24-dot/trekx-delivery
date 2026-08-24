@@ -3,6 +3,14 @@ import { createRoot } from "react-dom/client";
 import { createClient } from "@supabase/supabase-js";
 
 import {
+  GoogleMap,
+  LoadScript,
+  Marker,
+  Autocomplete,
+  DirectionsRenderer,
+} from "@react-google-maps/api";
+
+import {
   MapPin,
   Package,
   User,
@@ -13,11 +21,9 @@ import {
   Navigation,
   X,
   CheckCircle,
-  Home,
-  Search,
   ClipboardList,
   UserCircle,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 
 import Logo from "./Logo";
@@ -25,15 +31,544 @@ import "./style.css";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const supabase =
   supabaseUrl && supabaseKey
     ? createClient(supabaseUrl, supabaseKey)
     : null;
 
+const GOOGLE_MAPS_LIBRARIES = ["places"];
+
+function HomePage({ changePage }) {
+  return (
+    <>
+      <section className="hero">
+        <div>
+          <p className="eyebrow">
+            FAST • RELIABLE • LOCAL
+          </p>
+
+          <h1>
+            Deliver anything.
+            <br />
+            <em>Anywhere in Calabar.</em>
+          </h1>
+
+          <p className="lead">
+            Request a trusted rider, monitor your delivery and move
+            packages with confidence using TrekX.
+          </p>
+
+          <div className="heroBtns">
+            <button
+              className="primary"
+              onClick={() => changePage("book")}
+            >
+              Book a delivery
+              <ArrowRight size={18} />
+            </button>
+
+            <button
+              className="ghost"
+              onClick={() => changePage("track")}
+            >
+              Track Delivery
+            </button>
+          </div>
+        </div>
+
+        <div className="visual">
+          <Logo size={190} />
+
+          <div className="bubble">
+            ⚡ Fast Delivery
+          </div>
+
+          <div className="bubble two">
+            📍 Live Tracking
+          </div>
+        </div>
+      </section>
+
+      <section className="steps">
+        <p className="eyebrow">
+          SIMPLE & EASY
+        </p>
+
+        <h2>
+          Delivery in three steps
+        </h2>
+
+        <div className="stepgrid">
+
+          <article>
+            <span>01</span>
+            <MapPin />
+
+            <h3>Enter Locations</h3>
+
+            <p>
+              Choose pickup and destination.
+            </p>
+          </article>
+
+          <article>
+            <span>02</span>
+            <Logo size={34} />
+
+            <h3>Find Rider</h3>
+
+            <p>
+              TrekX matches you with a nearby rider.
+            </p>
+          </article>
+
+          <article>
+            <span>03</span>
+            <Package />
+
+            <h3>Track Package</h3>
+
+            <p>
+              Follow your delivery until it arrives.
+            </p>
+          </article>
+
+        </div>
+      </section>
+    </>
+  );
+}
+
+function BookPage({
+  marker,
+  setMarker,
+  directions,
+  form,
+  changeForm,
+  bookDelivery,
+  setPickupAutocomplete,
+  pickupAutocomplete,
+  setDestinationAutocomplete,
+  destinationAutocomplete,
+  setForm,
+  calculateRoute,
+  distance,
+  duration,
+  price,
+  message,
+}) {
+  return (
+    <section className="pageSection">
+      <div className="pageHeading">
+        <p className="eyebrow">NEW DELIVERY</p>
+
+        <h1>Book a Delivery</h1>
+
+        <p>Enter your pickup and destination.</p>
+      </div>
+
+      <div className="card">
+        <GoogleMap
+          mapContainerStyle={{
+            width: "100%",
+            height: "400px",
+            borderRadius: "12px",
+            marginBottom: "20px",
+          }}
+          center={marker}
+          zoom={13}
+          onClick={(e) => {
+            setMarker({
+              lat: e.latLng.lat(),
+              lng: e.latLng.lng(),
+            });
+          }}
+        >
+          <Marker position={marker} />
+
+          {directions && (
+            <DirectionsRenderer directions={directions} />
+          )}
+        </GoogleMap>
+
+        <form onSubmit={bookDelivery}>
+          <h2>Where should we deliver?</h2>
+
+          <label>
+            <MapPin />
+
+            <Autocomplete
+              onLoad={setPickupAutocomplete}
+              onPlaceChanged={() => {
+                const place = pickupAutocomplete?.getPlace();
+
+                if (place?.formatted_address) {
+                  setForm((prev) => ({
+                    ...prev,
+                    pickup: place.formatted_address,
+                  }));
+                }
+              }}
+            >
+              <input
+                required
+                value={form.pickup}
+                placeholder="Pickup location"
+                readOnly
+              />
+            </Autocomplete>
+          </label>
+
+          <label>
+            <Navigation />
+
+            <Autocomplete
+              onLoad={setDestinationAutocomplete}
+              onPlaceChanged={() => {
+                const place =
+                  destinationAutocomplete?.getPlace();
+
+                if (place?.formatted_address) {
+                  setForm((prev) => ({
+                    ...prev,
+                    destination: place.formatted_address,
+                  }));
+
+                  setTimeout(calculateRoute, 300);
+                }
+              }}
+            >
+              <input
+                required
+                value={form.destination}
+                placeholder="Destination"
+                readOnly
+              />
+            </Autocomplete>
+          </label>
+
+          {distance && (
+            <div className="priceCard">
+              <p>
+                <strong>Distance:</strong> {distance}
+              </p>
+
+              <p>
+                <strong>Estimated Time:</strong> {duration}
+              </p>
+
+              <p>
+                <strong>Estimated Price:</strong> ₦{price}
+              </p>
+            </div>
+          )}
+
+          <div className="grid">
+            <label>
+              <User />
+
+              <input
+                required
+                name="sender"
+                value={form.sender}
+                onChange={changeForm}
+                placeholder="Sender's name"
+              />
+            </label>
+
+            <label>
+              <Phone />
+
+              <input
+                required
+                name="phone"
+                value={form.phone}
+                onChange={changeForm}
+                placeholder="Phone number"
+              />
+            </label>
+          </div>
+
+          <div className="grid">
+            <label>
+              <User />
+
+              <input
+                required
+                name="recipient"
+                value={form.recipient}
+                onChange={changeForm}
+                placeholder="Recipient's name"
+              />
+            </label>
+
+            <label>
+              <Package />
+
+              <input
+                required
+                name="item"
+                value={form.item}
+                onChange={changeForm}
+                placeholder="Package description"
+              />
+            </label>
+          </div>
+
+          <button className="primary wide">
+            Request Delivery
+            <ArrowRight size={18} />
+          </button>
+        </form>
+
+        {message && (
+          <p className="message">
+            <CheckCircle size={18} />
+            {message}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function TrackPage({ marker, directions }) {
+  return (
+    <section className="pageSection">
+      <div className="pageHeading">
+        <p className="eyebrow">LIVE TRACKING</p>
+
+        <h1>Track Your Rider</h1>
+
+        <p>Follow your rider in real time.</p>
+      </div>
+
+      <div className="card">
+        <GoogleMap
+          mapContainerStyle={{
+            width: "100%",
+            height: "450px",
+            borderRadius: "12px",
+          }}
+          center={marker}
+          zoom={13}
+        >
+          <Marker position={marker} />
+
+          {directions && (
+            <DirectionsRenderer directions={directions} />
+          )}
+        </GoogleMap>
+      </div>
+    </section>
+  );
+}
+
+function DeliveriesPage({ user, deliveries, changePage, setAuthMode }) {
+  return (
+    <section className="pageSection">
+      <div className="pageHeading">
+        <p className="eyebrow">YOUR DELIVERIES</p>
+
+        <h1>My Deliveries</h1>
+
+        <p>All your delivery requests.</p>
+      </div>
+
+      {!user ? (
+        <div className="emptyState">
+          <ClipboardList size={60} />
+
+          <h2>Please sign in</h2>
+
+          <p>
+            Login to view your delivery history.
+          </p>
+
+          <button
+            className="primary"
+            onClick={() => {
+              setAuthMode("signin");
+              changePage("account");
+            }}
+          >
+            Sign In
+          </button>
+        </div>
+      ) : deliveries.length === 0 ? (
+        <div className="emptyState">
+          <Package size={60} />
+
+          <h2>No deliveries yet</h2>
+
+          <button
+            className="primary"
+            onClick={() => changePage("book")}
+          >
+            Book Delivery
+          </button>
+        </div>
+      ) : (
+        <div className="deliveryList">
+          {deliveries.map((delivery) => (
+            <article
+              className="deliveryItem"
+              key={delivery.id}
+            >
+              <div>
+                <span className="status">
+                  {delivery.status}
+                </span>
+
+                <h3>{delivery.pickup}</h3>
+
+                <p>
+                  To: {delivery.destination}
+                </p>
+              </div>
+
+              <Package />
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function AccountPage({
+  user,
+  authMode,
+  setAuthMode,
+  auth,
+  setAuth,
+  submitAuth,
+  signOut,
+  changePage,
+  message,
+}) {
+  if (user) {
+    return (
+      <section className="pageSection">
+        <div className="pageHeading">
+          <p className="eyebrow">YOUR ACCOUNT</p>
+
+          <h1>Welcome to TrekX</h1>
+
+          <p>{user.email}</p>
+        </div>
+
+        <div className="accountCard">
+          <UserCircle size={70} />
+
+          <h2>Account Active</h2>
+
+          <p>
+            You can now book deliveries and view your history.
+          </p>
+
+          <button
+            className="primary"
+            onClick={() => changePage("book")}
+          >
+            Book Delivery
+          </button>
+
+          <button
+            className="outlineButton"
+            onClick={signOut}
+          >
+            <LogOut size={18} />
+            Sign Out
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="pageSection">
+      <div className="authCard">
+
+        <div className="authTabs">
+          <button
+            className={authMode === "signin" ? "active" : ""}
+            onClick={() => setAuthMode("signin")}
+          >
+            Sign In
+          </button>
+
+          <button
+            className={authMode === "signup" ? "active" : ""}
+            onClick={() => setAuthMode("signup")}
+          >
+            Create Account
+          </button>
+        </div>
+
+        <form onSubmit={submitAuth}>
+          <h2>
+            {authMode === "signup"
+              ? "Create your account"
+              : "Welcome Back"}
+          </h2>
+
+          <label>
+            <User />
+
+            <input
+              type="email"
+              required
+              value={auth.email}
+              placeholder="Email"
+              onChange={(e) =>
+                setAuth({
+                  ...auth,
+                  email: e.target.value,
+                })
+              }
+            />
+          </label>
+
+          <label>
+            <LogIn />
+
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={auth.password}
+              placeholder="Password"
+              onChange={(e) =>
+                setAuth({
+                  ...auth,
+                  password: e.target.value,
+                })
+              }
+            />
+          </label>
+
+          <button className="primary wide">
+            {authMode === "signup"
+              ? "Create Account"
+              : "Sign In"}
+          </button>
+        </form>
+
+        {message && (
+          <p className="message">
+            <CheckCircle size={18} />
+            {message}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
 
 function App() {
-
   const [menu, setMenu] = useState(false);
   const [page, setPage] = useState("home");
   const [authMode, setAuthMode] = useState("signin");
@@ -41,20 +576,34 @@ function App() {
   const [user, setUser] = useState(null);
   const [deliveries, setDeliveries] = useState([]);
 
+  const [pickupAutocomplete, setPickupAutocomplete] = useState(null);
+  const [destinationAutocomplete, setDestinationAutocomplete] = useState(null);
+
+  const [directions, setDirections] = useState(null);
+  const [distance, setDistance] = useState("");
+  const [duration, setDuration] = useState("");
+  const [price, setPrice] = useState(0);
+
+  const [marker, setMarker] = useState({
+    lat: 4.9589,
+    lng: 8.3269,
+  });
+
   const [form, setForm] = useState({
     pickup: "",
     destination: "",
     sender: "",
     phone: "",
     recipient: "",
-    item: ""
+    item: "",
   });
 
   const [auth, setAuth] = useState({
     email: "",
-    password: ""
+    password: "",
   });
 
+  // ---- Auth listener ----
   useEffect(() => {
     if (!supabase) return;
 
@@ -63,7 +612,7 @@ function App() {
     });
 
     const {
-      data: { subscription }
+      data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
     });
@@ -71,10 +620,20 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const changeForm = (event) => {
+  // ---- Load deliveries whenever the logged-in user changes ----
+  useEffect(() => {
+    if (user) {
+      loadDeliveries();
+    } else {
+      setDeliveries([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  const changeForm = (e) => {
     setForm({
       ...form,
-      [event.target.name]: event.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -85,77 +644,122 @@ function App() {
 
     window.scrollTo({
       top: 0,
-      behavior: "smooth"
+      behavior: "smooth",
     });
   };
 
-  async function loadDeliveries() {
-    if (!supabase || !user) return;
+  const calculateRoute = () => {
+    if (!pickupAutocomplete || !destinationAutocomplete) return;
+    if (!window.google) return;
 
-    const { data, error } = await supabase
-      .from("deliveries")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+    const origin = pickupAutocomplete.getPlace()?.formatted_address;
+    const destination = destinationAutocomplete.getPlace()?.formatted_address;
 
-    if (!error) {
-      setDeliveries(data || []);
-    }
-  }
+    if (!origin || !destination) return;
 
-  useEffect(() => {
-    if (page === "deliveries") {
-      loadDeliveries();
-    }
-  }, [page, user]);
+    const service = new window.google.maps.DirectionsService();
 
-  async function bookDelivery(event) {
-    event.preventDefault();
-    setMessage("");
+    service.route(
+      {
+        origin,
+        destination,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === "OK") {
+          setDirections(result);
+
+          const leg = result.routes[0].legs[0];
+
+          setDistance(leg.distance.text);
+          setDuration(leg.duration.text);
+
+          const km = leg.distance.value / 1000;
+
+          setPrice(Math.round(1000 + km * 250));
+        } else {
+          console.error("Directions request failed:", status);
+        }
+      }
+    );
+  };
+
+  // ---- Book a delivery (writes to Supabase) ----
+  const bookDelivery = async (e) => {
+    e.preventDefault();
 
     if (!supabase) {
-      setMessage("TrekX is still connecting to its database.");
+      setMessage("Supabase is not configured.");
       return;
     }
 
-    if (!user) {
-      setMessage("Please sign in before requesting a delivery.");
-      setAuthMode("signin");
-      setPage("account");
-      return;
-    }
+    try {
+      const { error } = await supabase.from("deliveries").insert([
+        {
+          user_id: user?.id || null,
+          pickup: form.pickup,
+          destination: form.destination,
+          sender: form.sender,
+          phone: form.phone,
+          recipient: form.recipient,
+          item: form.item,
+          price,
+          status: "pending",
+        },
+      ]);
 
-    const { error } = await supabase
-      .from("deliveries")
-      .insert({
-        ...form,
-        user_id: user.id,
-        status: "Pending"
+      if (error) throw error;
+
+      setMessage("Delivery requested successfully!");
+
+      setForm({
+        pickup: "",
+        destination: "",
+        sender: "",
+        phone: "",
+        recipient: "",
+        item: "",
       });
 
-    if (error) {
-      setMessage(error.message);
-      return;
+      setDistance("");
+      setDuration("");
+      setPrice(0);
+      setDirections(null);
+
+      if (user) {
+        loadDeliveries();
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message || "Something went wrong booking your delivery.");
     }
+  };
 
-    setMessage("Delivery request submitted successfully!");
+  // ---- Load the current user's deliveries ----
+  const loadDeliveries = async () => {
+    if (!supabase || !user) return;
 
-    setForm({
-      pickup: "",
-      destination: "",
-      sender: "",
-      phone: "",
-      recipient: "",
-      item: ""
-    });
-  }
+    try {
+      const { data, error } = await supabase
+        .from("deliveries")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-  async function submitAuth(event) {
-    event.preventDefault();
-    setMessage("");
+      if (error) throw error;
+
+      setDeliveries(data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ---- Sign in / Sign up ----
+  const submitAuth = async (e) => {
+    e.preventDefault();
 
     if (!supabase) {
-      setMessage("The TrekX database connection is not available.");
+      setMessage("Supabase is not configured.");
       return;
     }
 
@@ -163,593 +767,51 @@ function App() {
       if (authMode === "signup") {
         const { error } = await supabase.auth.signUp({
           email: auth.email,
-          password: auth.password
+          password: auth.password,
         });
 
-        if (error) {
-          setMessage(error.message);
-          return;
-        }
+        if (error) throw error;
 
-        setMessage(
-          "Account created. Check your email if confirmation is enabled."
-        );
+        setMessage("Account created! Check your email to confirm.");
       } else {
-        const { error } =
-          await supabase.auth.signInWithPassword({
-            email: auth.email,
-            password: auth.password
-          });
+        const { error } = await supabase.auth.signInWithPassword({
+          email: auth.email,
+          password: auth.password,
+        });
 
-        if (error) {
-          setMessage(error.message);
-          return;
-        }
+        if (error) throw error;
 
         setMessage("Signed in successfully!");
-        changePage("book");
       }
-    } catch {
-      setMessage(
-        "Connection failed. Please check your internet and try again."
-      );
-    }
-  }
 
-  async function signOut() {
-    if (supabase) {
-      await supabase.auth.signOut();
+      setAuth({ email: "", password: "" });
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message || "Authentication failed.");
     }
+  };
 
+  // ---- Sign out ----
+  const signOut = async () => {
+    if (!supabase) return;
+
+    await supabase.auth.signOut();
     setUser(null);
     setDeliveries([]);
     changePage("home");
-  }
-
-  function HomePage() {
-    return (
-      <>
-        <section className="hero">
-          <div>
-            <p className="eyebrow">
-              FAST • RELIABLE • LOCAL
-            </p>
-
-            <h1>
-              Deliver anything.
-              <br />
-              <em>Anywhere in Calabar.</em>
-            </h1>
-
-            <p className="lead">
-              Request a trusted rider, monitor your delivery,
-              and move packages with confidence using TrekX.
-            </p>
-
-            <div className="heroBtns">
-              <button
-                className="primary"
-                onClick={() => changePage("book")}
-              >
-                Book a delivery
-                <ArrowRight size={18} />
-              </button>
-
-              <button
-                className="ghost"
-                onClick={() => changePage("track")}
-              >
-                Track a delivery
-              </button>
-            </div>
-          </div>
-
-          <div className="visual">
-            <Logo size={190} />
-
-            <div className="bubble">
-              ⚡ Fast delivery
-            </div>
-
-            <div className="bubble two">
-              📍 Live updates
-            </div>
-          </div>
-        </section>
-
-        <section className="steps">
-          <p className="eyebrow">
-            SIMPLE AND EASY
-          </p>
-
-          <h2>
-            Delivery in three steps
-          </h2>
-
-          <div className="stepgrid">
-            <article>
-              <span>01</span>
-              <MapPin />
-
-              <h3>
-                Enter locations
-              </h3>
-
-              <p>
-                Tell TrekX where your package
-                should be picked up and delivered.
-              </p>
-            </article>
-
-            <article>
-              <span>02</span>
-              <Logo size={32} />
-
-              <h3>
-                Get matched
-              </h3>
-
-              <p>
-                An available independent rider
-                can accept your delivery request.
-              </p>
-            </article>
-
-            <article>
-              <span>03</span>
-              <Package />
-
-              <h3>
-                Track and receive
-              </h3>
-
-              <p>
-                Follow your delivery status
-                until the package arrives.
-              </p>
-            </article>
-          </div>
-        </section>
-
-        <section className="rider">
-          <div>
-            <p className="eyebrow">
-              EARN WITH TREKX
-            </p>
-
-            <h2>
-              Turn your <Logo size={32} /> into income.
-            </h2>
-
-            <p>
-              Join TrekX as an independent delivery
-              rider and earn on your schedule.
-            </p>
-
-            <button
-              className="lightButton"
-              onClick={() => changePage("account")}
-            >
-              Become a rider
-            </button>
-          </div>
-
-          <Logo size={165} />
-        </section>
-      </>
-    );
-  }
-
-  function BookPage() {
-    return (
-      <section className="pageSection">
-        <div className="pageHeading">
-          <p className="eyebrow">
-            NEW DELIVERY
-          </p>
-
-          <h1>
-            Book a delivery
-          </h1>
-
-          <p>
-            Enter the pickup and destination details.
-          </p>
-        </div>
-
-        <div className="card">
-          <form onSubmit={bookDelivery}>
-            <h2>
-              Where should we deliver?
-            </h2>
-
-            <label>
-              <MapPin />
-
-              <input
-                required
-                name="pickup"
-                value={form.pickup}
-                onChange={changeForm}
-                placeholder="Pickup location"
-              />
-            </label>
-
-            <label>
-              <Navigation />
-
-              <input
-                required
-                name="destination"
-                value={form.destination}
-                onChange={changeForm}
-                placeholder="Delivery destination"
-              />
-            </label>
-
-            <div className="grid">
-              <label>
-                <User />
-
-                <input
-                  required
-                  name="sender"
-                  value={form.sender}
-                  onChange={changeForm}
-                  placeholder="Sender's name"
-                />
-              </label>
-
-              <label>
-                <Phone />
-
-                <input
-                  required
-                  name="phone"
-                  value={form.phone}
-                  onChange={changeForm}
-                  placeholder="Phone number"
-                />
-              </label>
-            </div>
-
-            <div className="grid">
-              <label>
-                <User />
-
-                <input
-                  required
-                  name="recipient"
-                  value={form.recipient}
-                  onChange={changeForm}
-                  placeholder="Recipient's name"
-                />
-              </label>
-
-              <label>
-                <Package />
-
-                <input
-                  required
-                  name="item"
-                  value={form.item}
-                  onChange={changeForm}
-                  placeholder="What are we delivering?"
-                />
-              </label>
-            </div>
-
-            <button className="primary wide">
-              Request delivery
-              <ArrowRight size={18} />
-            </button>
-          </form>
-
-          {message && (
-            <p className="message">
-              <CheckCircle size={18} />
-              {message}
-            </p>
-          )}
-        </div>
-      </section>
-    );
-  }
-
-  function TrackPage() {
-    return (
-      <section className="pageSection">
-        <div className="pageHeading">
-          <p className="eyebrow">
-            DELIVERY TRACKING
-          </p>
-
-          <h1>
-            Track your package
-          </h1>
-
-          <p>
-            Enter a TrekX delivery reference
-            to view its current status.
-          </p>
-        </div>
-
-        <div className="card trackCard">
-          <Search size={42} />
-
-          <h2>
-            Find a delivery
-          </h2>
-
-          <label>
-            <Package />
-
-            <input
-              placeholder="Enter delivery reference"
-            />
-          </label>
-
-          <button
-            className="primary wide"
-            onClick={() =>
-              setMessage(
-                "Live tracking will be activated when rider tracking is connected."
-              )
-            }
-          >
-            Track delivery
-          </button>
-
-          {message && (
-            <p className="message">
-              <CheckCircle size={18} />
-              {message}
-            </p>
-          )}
-        </div>
-      </section>
-    );
-  }
-
-  function DeliveriesPage() {
-    return (
-      <section className="pageSection">
-        <div className="pageHeading">
-          <p className="eyebrow">
-            YOUR ACTIVITY
-          </p>
-
-          <h1>
-            My deliveries
-          </h1>
-
-          <p>
-            View your current and previous requests.
-          </p>
-        </div>
-
-        {!user ? (
-          <div className="emptyState">
-            <ClipboardList size={48} />
-
-            <h2>
-              Sign in to view deliveries
-            </h2>
-
-            <p>
-              Your delivery history will appear here.
-            </p>
-
-            <button
-              className="primary"
-              onClick={() => {
-                setAuthMode("signin");
-                changePage("account");
-              }}
-            >
-              Sign in
-            </button>
-          </div>
-        ) : deliveries.length === 0 ? (
-          <div className="emptyState">
-            <Package size={48} />
-
-            <h2>
-              No deliveries yet
-            </h2>
-
-            <p>
-              Your delivery requests will appear here.
-            </p>
-
-            <button
-              className="primary"
-              onClick={() => changePage("book")}
-            >
-              Book a delivery
-            </button>
-          </div>
-        ) : (
-          <div className="deliveryList">
-            {deliveries.map((delivery) => (
-              <article
-                className="deliveryItem"
-                key={delivery.id}
-              >
-                <div>
-                  <span className="status">
-                    {delivery.status}
-                  </span>
-
-                  <h3>
-                    {delivery.pickup}
-                  </h3>
-
-                  <p>
-                    To: {delivery.destination}
-                  </p>
-                </div>
-
-                <Package />
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
-    );
-  }
-
-  function AccountPage() {
-    if (user) {
-      return (
-        <section className="pageSection">
-          <div className="pageHeading">
-            <p className="eyebrow">
-              YOUR ACCOUNT
-            </p>
-
-            <h1>
-              Welcome to TrekX
-            </h1>
-
-            <p>
-              {user.email}
-            </p>
-          </div>
-
-          <div className="accountCard">
-            <UserCircle size={70} />
-
-            <h2>
-              Account active
-            </h2>
-
-            <p>
-              You can request deliveries and
-              view your delivery history.
-            </p>
-
-            <button
-              className="primary"
-              onClick={() => changePage("book")}
-            >
-              Book a delivery
-            </button>
-
-            <button
-              className="outlineButton"
-              onClick={signOut}
-            >
-              <LogOut size={17} />
-              Sign out
-            </button>
-          </div>
-        </section>
-      );
-    }
-
-    return (
-      <section className="pageSection">
-        <div className="authCard">
-          <div className="authTabs">
-            <button
-              className={
-                authMode === "signin"
-                  ? "active"
-                  : ""
-              }
-              onClick={() => {
-                setAuthMode("signin");
-                setMessage("");
-              }}
-            >
-              Sign in
-            </button>
-
-            <button
-              className={
-                authMode === "signup"
-                  ? "active"
-                  : ""
-              }
-              onClick={() => {
-                setAuthMode("signup");
-                setMessage("");
-              }}
-            >
-              Create account
-            </button>
-          </div>
-
-          <form onSubmit={submitAuth}>
-            <h2>
-              {authMode === "signup"
-                ? "Create your TrekX account"
-                : "Welcome back"}
-            </h2>
-
-            <label>
-              <User />
-
-              <input
-                type="email"
-                required
-                value={auth.email}
-                onChange={(event) =>
-                  setAuth({
-                    ...auth,
-                    email: event.target.value
-                  })
-                }
-                placeholder="Email address"
-              />
-            </label>
-
-            <label>
-              <LogIn />
-
-              <input
-                type="password"
-                required
-                minLength="6"
-                value={auth.password}
-                onChange={(event) =>
-                  setAuth({
-                    ...auth,
-                    password: event.target.value
-                  })
-                }
-                placeholder="Password"
-              />
-            </label>
-
-            <button className="primary wide">
-              {authMode === "signup"
-                ? "Create account"
-                : "Sign in"}
-            </button>
-          </form>
-
-          {message && (
-            <p className="message">
-              <CheckCircle size={18} />
-              {message}
-            </p>
-          )}
-        </div>
-      </section>
-    );
-  }
+  };
 
   return (
-    <>
+    <LoadScript
+      googleMapsApiKey={googleMapsApiKey}
+      libraries={GOOGLE_MAPS_LIBRARIES}
+    >
       <header>
         <button
           className="brand"
           onClick={() => changePage("home")}
         >
-          <Logo size={32} />
-
+          <Logo size={34} />
           <span>
             TrekX <b>Delivery</b>
           </span>
@@ -775,56 +837,87 @@ function App() {
           </button>
 
           <button
-            className="navAccount"
             onClick={() => changePage("account")}
           >
-            {user ? "Account" : "Sign in"}
+            {user ? "Account" : "Sign In"}
           </button>
         </nav>
 
         <button
           className="hamb"
           onClick={() => setMenu(!menu)}
-          aria-label="Open menu"
         >
           {menu ? <X /> : <Menu />}
         </button>
       </header>
 
       <main>
-        {page === "home" && <HomePage />}
-
-        {page === "book" && <BookPage />}
-
-        {page === "track" && <TrackPage />}
-
-        {page === "deliveries" && (
-          <DeliveriesPage />
+        {page === "home" && (
+          <HomePage changePage={changePage} />
         )}
 
-        {page === "account" && <AccountPage />}
+        {page === "book" && (
+          <BookPage
+            marker={marker}
+            setMarker={setMarker}
+            directions={directions}
+            form={form}
+            setForm={setForm}
+            changeForm={changeForm}
+            bookDelivery={bookDelivery}
+            pickupAutocomplete={pickupAutocomplete}
+            setPickupAutocomplete={setPickupAutocomplete}
+            destinationAutocomplete={destinationAutocomplete}
+            setDestinationAutocomplete={setDestinationAutocomplete}
+            calculateRoute={calculateRoute}
+            distance={distance}
+            duration={duration}
+            price={price}
+            message={message}
+          />
+        )}
+
+        {page === "track" && (
+          <TrackPage marker={marker} directions={directions} />
+        )}
+
+        {page === "deliveries" && (
+          <DeliveriesPage
+            user={user}
+            deliveries={deliveries}
+            changePage={changePage}
+            setAuthMode={setAuthMode}
+          />
+        )}
+
+        {page === "account" && (
+          <AccountPage
+            user={user}
+            authMode={authMode}
+            setAuthMode={setAuthMode}
+            auth={auth}
+            setAuth={setAuth}
+            submitAuth={submitAuth}
+            signOut={signOut}
+            changePage={changePage}
+            message={message}
+          />
+        )}
       </main>
 
       <footer>
-        <div className="footerBrand">
-          <Logo size={32} />
+        <Logo size={32} />
 
-          <span>
-            TrekX Delivery
-          </span>
-        </div>
-
-        <p>
-          Book. Track. Deliver.
-        </p>
+        <p>Book • Track • Deliver</p>
 
         <small>
-          © 2026 TrekX Delivery.
-          All rights reserved.
+          © 2026 TrekX Delivery. All rights reserved.
         </small>
       </footer>
-    </>
+    </LoadScript>
   );
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+createRoot(document.getElementById("root")).render(
+  <App />
+);
