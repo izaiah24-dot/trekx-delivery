@@ -917,7 +917,6 @@ function App() {
     </LoadScript>
   );
 }
-
 createRoot(document.getElementById("root")).render(
   <App />
 );
